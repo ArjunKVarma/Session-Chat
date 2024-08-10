@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1034937906054",
+    "project_id": "session-chat-9bb76",
+    "storage_bucket": "session-chat-9bb76.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034937906054:android:18f9fd7b9e5fbdad463207",
+        "android_client_info": {
+          "package_name": "com.example.sessionchat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlOWHbR7-VUmKlMSTQmOZGcCjweparZhg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034937906054:android:8fa5feef39070e99463207",
+        "android_client_info": {
+          "package_name": "com.sessionchat.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlOWHbR7-VUmKlMSTQmOZGcCjweparZhg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
