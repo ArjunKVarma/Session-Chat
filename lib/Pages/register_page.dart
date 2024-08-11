@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sessionchat/Services/auth.dart';
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({Key? key}) : super(key: key);
@@ -8,13 +9,28 @@ class RegisterPage extends StatelessWidget {
   final passwordController = TextEditingController();
   final confirmpasscontroller = TextEditingController();
 
+  void signup(context) {
+    final AuthService _auth = AuthService();
+
+    try {
+      _auth.signup(usernameController.text, passwordController.text);
+    } catch (e) {
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text('Error: ${e.toString()}'),
+              ));
+    }
+  }
+
   void validate(context) {
     if (_formkey.currentState != null && _formkey.currentState!.validate()) {
       print(usernameController.text);
       print(passwordController.text);
 
       print('login successful!');
-      Navigator.pushReplacementNamed(context, '/chat',
+      signup(context);
+      Navigator.pushReplacementNamed(context, '/login',
           arguments: usernameController.text);
     } else {
       print('not successful!');

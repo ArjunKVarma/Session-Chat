@@ -12,8 +12,8 @@ class LoginPage extends StatelessWidget {
     final auth = AuthService();
     try {
       await auth.signin(usernameController.text, passwordController.text);
-      print(
-          "Doneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+      Navigator.pushReplacementNamed(context, '/home',
+          arguments: usernameController.text);
     } catch (e) {
       showDialog(
           context: context,
@@ -25,17 +25,15 @@ class LoginPage extends StatelessWidget {
     }
   }
 
-  void validate(context) {
+  void validate(context) async {
     if (_formkey.currentState != null && _formkey.currentState!.validate()) {
       print(usernameController.text);
       print(passwordController.text);
 
       print('login successful!');
-
-      Navigator.pushReplacementNamed(context, '/register',
-          arguments: usernameController.text);
+      signin(context);
     } else {
-      print('not successful!');
+      print('login failed!');
     }
   }
 
@@ -116,7 +114,7 @@ class LoginPage extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      signin(context);
+                      validate(context);
                     },
                     child: Text("Sign-In"),
                     style: ElevatedButton.styleFrom(

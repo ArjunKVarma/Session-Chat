@@ -1,7 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:sessionchat/Pages/homepage.dart';
 import 'package:sessionchat/Pages/login_page.dart';
 import 'package:sessionchat/Pages/register_page.dart';
+import 'package:sessionchat/Services/log_check.dart';
 import 'package:sessionchat/Utils/themedata.dart';
 import 'package:sessionchat/firebase_options.dart';
 
@@ -20,10 +22,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: theme,
-      home: LoginPage(),
+      home: AuthVerify(),
       routes: {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
+        '/home': (context) => Homepage()
       },
     );
   }
