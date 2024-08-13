@@ -13,7 +13,7 @@ class AuthVerify extends StatelessWidget {
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snap) {
             if (snap.hasData) {
-              return const Homepage();
+              return Homepage();
             } else {
               return LoginPage();
             }
