@@ -24,43 +24,84 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Map reciverId = ModalRoute.of(context)!.settings.arguments as Map;
-
+    final Map room_id = ModalRoute.of(context)!.settings.arguments as Map;
+    final Map password = ModalRoute.of(context)!.settings.arguments as Map;
+    print(room_id['room_id']);
+    print(password['password']);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
-              onPressed: () => {Navigator.pop(context)},
+              onPressed: () => {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title:
+                                const Text('Do you want to delete this chat?'),
+                            content: const Text(
+                                'This chat will be securly deleted from you device and our servers.'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: const Text('Confirm'),
+                                onPressed: () async {
+                                  await _chat.deleteChat(
+                                      room_id['room_id'], password['password']);
+                                  Navigator.pushNamed(context, '/');
+                                },
+                              ),
+                            ],
+                          );
+                        })
+                  },
               icon: const Icon(Icons.exit_to_app))
         ],
-        title: GestureDetector(
-          onLongPress: () {
-            Navigator.pushReplacementNamed(context, "/");
-          },
-          child: const Text("SessionChat"),
-        ),
+        title: const Text("SessionChat"),
       ),
       body: Column(
         children: [
-          Expanded(child: _buildmessages(reciverId)),
+          Text(room_id['room_id'] + "" + password['password']),
+          Expanded(
+              child: _buildmessages(room_id['room_id'], password['password'])),
           ChatInput(
-            recieverId: reciverId['reciverId'],
+            room_id: room_id['room_id'],
+            password: password['password'],
           )
         ],
       ),
     );
   }
 
-  Widget _buildmessages(Map reciverId) {
+  Widget _buildmessages(String room_id, password) {
     String senderId = _auth.currentUser!.uid;
     return StreamBuilder(
-        stream: _chat.getMessages(reciverId['reciverId'], senderId),
+        stream: _chat.getMessages(room_id, password, senderId),
         builder: (context, snap) {
           if (snap.hasError) {
-            return const Text("Error");
+            if (snap.error is Exception) {
+              if (snap.error.toString() == "Chat room not found") {
+                return Center(
+                  child: Text(
+                    "Chat room not found",
+                    style: TextStyle(fontSize: 24, color: Colors.red),
+                  ),
+                );
+              } else {
+                return Text(
+                    "Error: ${snap.error.toString()}"); // <--- Changed here
+              }
+            } else {
+              return Text(
+                  "Error: ${snap.error.toString()}"); // <--- Changed here
+            }
           }
 
           if (snap.connectionState == ConnectionState.waiting) {

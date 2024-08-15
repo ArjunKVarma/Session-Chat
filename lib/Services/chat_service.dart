@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sessionchat/models/message_file.dart';
-import 'package:word_generator/word_generator.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -15,43 +14,68 @@ class ChatService {
     });
   }
 
-  Future<void> sendMessage(String recieverID, message) async {
+  Future<void> sendMessage(String room_id, password, message) async {
     final user = _auth.currentUser!;
     final Timestamp time = Timestamp.now();
-
-    final wordGenerator = WordGenerator();
-    String noun = wordGenerator.randomSentence(3);
-
-    print("woooooooooooooord" + noun.trim().toLowerCase().replaceAll(" ", ''));
-
+    List<String> ids = [room_id, password];
+    ids.sort();
+    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
     Message new_message = Message(
         text: message,
         id: "100",
         createdAt: time,
-        ReciverId: recieverID,
+        ReciverId: room_id,
         senderId: user.uid,
         sendermail: user.email!);
-    List<String> roomid = [user.uid, recieverID];
-    roomid.sort();
-    print(new_message.toString());
-    String chatRoom_ID = roomid.join('-');
+
     await _firestore
         .collection('ChatRooms')
-        .doc(chatRoom_ID)
+        .doc(id)
         .collection('messages')
         .add(new_message.toMap());
   }
 
-  Stream<QuerySnapshot> getMessages(String recieverID, senderId) {
-    List<String> roomid = [senderId, recieverID];
-    roomid.sort();
+  Stream<QuerySnapshot> getMessages(String room_id, password, senderId) async* {
+    List<String> ids = [room_id, password];
+    ids.sort();
+    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
 
-    String chatRoom_ID = roomid.join('-');
-    return _firestore
+    final chatRoomRef = _firestore.collection('ChatRooms').doc(id);
+    final chatRoomDoc = await chatRoomRef.get();
+
+    if (chatRoomDoc.exists) {
+      yield* chatRoomRef
+          .collection("messages")
+          .orderBy('createdAt', descending: false)
+          .snapshots();
+    } else {
+      throw Exception("Chat room not found");
+    }
+  }
+
+  Future<void> deleteChat(String room_id, password) async {
+    List<String> ids = [room_id, password];
+    ids.sort();
+    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    print(id);
+
+    await _firestore
         .collection('ChatRooms')
-        .doc(chatRoom_ID)
-        .collection("messages")
-        .orderBy('createdAt', descending: false)
-        .snapshots();
+        .doc(id)
+        .collection('messages')
+        .get()
+        .then((querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        doc.reference.delete();
+      });
+    });
+    await _firestore.collection('ChatRooms').doc(id).delete();
+  }
+
+  void createChat(String room_id, password) async {
+    List<String> ids = [room_id, password];
+    ids.sort();
+    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    await _firestore.collection('ChatRooms').doc(id).set({});
   }
 }

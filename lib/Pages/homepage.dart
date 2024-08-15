@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/auth.dart';
 import 'package:sessionchat/Services/chat_service.dart';
+import 'package:word_generator/word_generator.dart';
+import 'package:english_words/english_words.dart';
 
-class Homepage extends StatelessWidget {
+class Homepage extends StatefulWidget {
   Homepage({super.key});
 
+  @override
+  State<Homepage> createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+  final wordGenerator = WordGenerator();
+  final ChatService _chat = ChatService();
+  final TextEditingController _room_id_controller = TextEditingController();
+  final TextEditingController _password_controller = TextEditingController();
+  String noun = '';
+  String password = '';
   void logout(context) {
     final AuthService _auth = AuthService();
     _auth.logout();
     Navigator.pushReplacementNamed(context, '/');
   }
 
-  final ChatService _chat = ChatService();
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,25 +48,42 @@ class Homepage extends StatelessWidget {
   }
 
   Widget userlist() {
-    return StreamBuilder(
-        stream: _chat.getUsersStream(),
-        builder: (context, snap) {
-          if (snap.hasError) {
-            return const Text("Error");
-          }
+    return Container(
+      child: Column(
+        children: [
+          TextField(
+            controller: _room_id_controller,
+          ),
+          TextField(
+            controller: _password_controller,
+          ),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/chat', arguments: {
+                  "room_id": _room_id_controller.text,
+                  'password': _password_controller.text
+                });
+              },
+              child: Text("Join")),
+          ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  if (noun == '' && password == '') {
+                    noun = wordGenerator.randomSentence(3);
+                    password = wordGenerator.randomVerb();
+                    print(noun + password);
+                    _chat.createChat(noun, password);
 
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Text("Loading......");
-          }
-
-          return ListView(
-            children: snap.data!
-                .map<Widget>(
-                  (data) => builduser(data, context),
-                )
-                .toList(),
-          );
-        });
+                    Navigator.pushNamed(context, '/chat',
+                        arguments: {"room_id": noun, "password": password});
+                  }
+                });
+              },
+              child: Text("Create Room")),
+          Text(noun)
+        ],
+      ),
+    );
   }
 
   builduser(Map<String, dynamic> data, BuildContext context) {

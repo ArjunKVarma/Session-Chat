@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/chat_service.dart';
 
 class ChatInput extends StatelessWidget {
-  final String recieverId;
+  final String room_id;
+  final String password;
   final chatMessageControllrer = TextEditingController();
   final ChatService _chat = ChatService();
 
   void send() async {
-    await _chat.sendMessage(recieverId, chatMessageControllrer.text);
+    await _chat.sendMessage(room_id, password, chatMessageControllrer.text);
   }
 
-  ChatInput({Key? key, required this.recieverId}) : super(key: key);
+  ChatInput({Key? key, required this.room_id, required this.password})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
