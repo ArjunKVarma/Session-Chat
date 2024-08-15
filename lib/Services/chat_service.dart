@@ -35,7 +35,7 @@ class ChatService {
         .add(new_message.toMap());
   }
 
-  Stream<QuerySnapshot> getMessages(String room_id, password, senderId) async* {
+  Stream<QuerySnapshot> getMessages(String room_id, password) async* {
     List<String> ids = [room_id, password];
     ids.sort();
     String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');

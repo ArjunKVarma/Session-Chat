@@ -31,6 +31,7 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
@@ -68,7 +69,22 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(
         children: [
-          Text(room_id['room_id'] + "" + password['password']),
+          Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.all(Radius.circular(20))),
+            margin: EdgeInsets.all(10),
+            padding: EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("RoomId:  ${room_id['room_id']}"),
+                Text("Password: ${password['password']}"),
+              ],
+            ),
+          ),
+          // ignore: prefer_interpolation_to_compose_strings
+
           Expanded(
               child: _buildmessages(room_id['room_id'], password['password'])),
           ChatInput(
@@ -83,7 +99,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildmessages(String room_id, password) {
     String senderId = _auth.currentUser!.uid;
     return StreamBuilder(
-        stream: _chat.getMessages(room_id, password, senderId),
+        stream: _chat.getMessages(room_id, password),
         builder: (context, snap) {
           if (snap.hasError) {
             if (snap.error is Exception) {

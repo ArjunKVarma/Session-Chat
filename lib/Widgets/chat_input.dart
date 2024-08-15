@@ -17,8 +17,8 @@ class ChatInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-          color: Colors.black,
+      decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20), topRight: Radius.circular(20))),
       height: 100,
@@ -26,29 +26,47 @@ class ChatInput extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Container();
-                    });
-              },
-              icon: const Icon(CupertinoIcons.paperclip)),
+            onPressed: () {
+              showModalBottomSheet(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Container(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Center(
+                            child: Text("This section is under Development"),
+                          ),
+                        ],
+                      ),
+                    );
+                  });
+            },
+            icon: const Icon(CupertinoIcons.paperclip),
+            color: Theme.of(context).colorScheme.onSecondary,
+          ),
           Expanded(
               child: TextField(
                   controller: chatMessageControllrer,
                   keyboardType: TextInputType.multiline,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                      hintText: "Message", border: InputBorder.none))),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary),
+                  decoration: InputDecoration(
+                      hintText: "Message",
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      )))),
           IconButton(
-              onPressed: () {
-                if (chatMessageControllrer.text.isNotEmpty) {
-                  send();
-                  chatMessageControllrer.clear();
-                }
-              },
-              icon: const Icon(Icons.send_rounded))
+            onPressed: () {
+              if (chatMessageControllrer.text.isNotEmpty) {
+                send();
+                chatMessageControllrer.clear();
+              }
+            },
+            icon: const Icon(Icons.send_rounded),
+            color: Theme.of(context).colorScheme.onSecondary,
+          )
         ],
       ),
     );
