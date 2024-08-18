@@ -56,6 +56,7 @@ class _ChatPageState extends State<ChatPage> {
                                 onPressed: () async {
                                   await _chat.deleteChat(
                                       room_id['room_id'], password['password']);
+                                  await _chat.removeRoom();
                                   Navigator.pushNamed(context, '/');
                                 },
                               ),

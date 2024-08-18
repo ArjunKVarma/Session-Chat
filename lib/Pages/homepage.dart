@@ -106,7 +106,9 @@ class _HomepageState extends State<Homepage> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          await _chat.setRoom(
+                              _roomIdController.text, _passwordController.text);
                           Navigator.pushNamed(context, '/chat', arguments: {
                             "room_id": _roomIdController.text,
                             'password': _passwordController.text
@@ -151,12 +153,12 @@ class _HomepageState extends State<Homepage> {
                                 Theme.of(context).colorScheme.surface,
                           ),
                           onPressed: () {
-                            setState(() {
+                            setState(() async {
                               if (noun == '' && password == '') {
                                 noun = wordGenerator.randomSentence(3);
                                 password = wordGenerator.randomVerb();
                                 _chat.createChat(noun, password);
-
+                                await _chat.setRoom(noun, password);
                                 Navigator.pushReplacementNamed(context, '/chat',
                                     arguments: {
                                       "room_id": noun,

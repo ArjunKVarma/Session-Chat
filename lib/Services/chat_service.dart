@@ -78,4 +78,41 @@ class ChatService {
     String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
     await _firestore.collection('ChatRooms').doc(id).set({});
   }
+
+  //Get the room_id of currentUser
+  Future<String?> get currRoom async {
+    final user = _auth.currentUser!;
+    final userDoc = await _firestore.collection("Users").doc(user.uid).get();
+    if (userDoc.exists && userDoc.get("room_id") != null) {
+      return userDoc.get("room_id");
+    } else {
+      return null;
+    }
+  }
+
+  //Change the room_id of current user
+  Future<void> setRoom(String room_id, password) async {
+    List<String> ids = [room_id, password];
+    ids.sort();
+    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    await _firestore
+        .collection("Users")
+        .doc(_auth.currentUser!.uid)
+        .update({"room_id": id});
+  }
+
+  // Remove current Users RoomId
+  Future<void> removeRoom() async {
+    print('Removing room_id from user document...');
+    final user = _auth.currentUser!;
+    final userDocRef = _firestore.collection("Users").doc(user.uid);
+    final userDoc = await userDocRef.get();
+    if (userDoc.exists) {
+      print('User document found. Updating...');
+      await userDocRef.update({"room_id": FieldValue.delete()});
+      print('Room_id field deleted.');
+    } else {
+      print('User document not found.');
+    }
+  }
 }
