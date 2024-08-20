@@ -21,14 +21,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Sessions',
       theme: theme,
-      home: AuthVerify(),
+      home: const AuthVerify(),
       routes: {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
-        '/home': (context) => Homepage(),
-        '/chat': (context) => ChatPage()
+        '/home': (context) => const Homepage(),
+        '/chat': (context) => const ChatPage()
       },
     );
   }

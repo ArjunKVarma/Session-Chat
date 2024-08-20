@@ -1,3 +1,4 @@
+// Import necessary packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -5,141 +6,169 @@ import 'package:sessionchat/Services/chat_service.dart';
 import 'package:sessionchat/Widgets/chat_bubble.dart';
 import 'package:sessionchat/Widgets/chat_input.dart';
 
+// Define the ChatPage widget
 class ChatPage extends StatefulWidget {
-  const ChatPage({
-    Key? key,
-  }) : super(key: key);
+  const ChatPage({super.key});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
 
+// Define the _ChatPageState class
 class _ChatPageState extends State<ChatPage> {
+  // Initialize Firebase Authentication and ChatService instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final ChatService _chat = ChatService();
-  @override
-  void initState() {
-    super.initState();
-  }
 
+  // Define the app title
+  static const String _appTitle = "SessionChat";
+
+  // Build the ChatPage widget
   @override
   Widget build(BuildContext context) {
+    // Get the room ID and password from the route arguments
     final Map room_id = ModalRoute.of(context)!.settings.arguments as Map;
     final Map password = ModalRoute.of(context)!.settings.arguments as Map;
-    print(room_id['room_id']);
-    print(password['password']);
+
+    // Return the Scaffold widget
     return Scaffold(
+      // Set the background color to the primary color of the theme
       backgroundColor: Theme.of(context).colorScheme.primary,
+      // Define the AppBar
       appBar: AppBar(
+        // Hide the leading icon
         automaticallyImplyLeading: false,
+        // Set the background color to transparent
         backgroundColor: Colors.transparent,
+        // Define the actions
         actions: [
-          IconButton(
-              onPressed: () => {
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title:
-                                const Text('Do you want to delete this chat?'),
-                            content: const Text(
-                                'This chat will be securly deleted from you device and our servers.'),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text('Cancel'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              TextButton(
-                                child: const Text('Confirm'),
-                                onPressed: () async {
-                                  await _chat.deleteChat(
-                                      room_id['room_id'], password['password']);
-                                  await _chat.removeRoom();
-                                  Navigator.pushNamed(context, '/');
-                                },
-                              ),
-                            ],
-                          );
-                        })
-                  },
-              icon: const Icon(Icons.exit_to_app))
+          // Add the delete chat button
+          _deleteChatButton(room_id, password),
         ],
-        title: const Text("SessionChat"),
+        // Set the title
+        title: const Text(_appTitle),
       ),
+      // Define the body
       body: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-            margin: EdgeInsets.all(10),
-            padding: EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("RoomId:  ${room_id['room_id']}"),
-                Text("Password: ${password['password']}"),
-              ],
-            ),
-          ),
-          // ignore: prefer_interpolation_to_compose_strings
-
+          // Add the chat header
+          _chatHeader(room_id, password),
+          // Add the message list
           Expanded(
-              child: _buildmessages(room_id['room_id'], password['password'])),
+              child: _messageList(room_id['room_id'], password['password'])),
+          // Add the chat input
           ChatInput(
             room_id: room_id['room_id'],
             password: password['password'],
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildmessages(String room_id, password) {
-    String senderId = _auth.currentUser!.uid;
-    return StreamBuilder(
-        stream: _chat.getMessages(room_id, password),
-        builder: (context, snap) {
-          if (snap.hasError) {
-            if (snap.error is Exception) {
-              if (snap.error.toString() == "Chat room not found") {
-                return Center(
-                  child: Text(
-                    "Chat room not found",
-                    style: TextStyle(fontSize: 24, color: Colors.red),
-                  ),
-                );
-              } else {
-                return Text(
-                    "Error: ${snap.error.toString()}"); // <--- Changed here
-              }
-            } else {
-              return Text(
-                  "Error: ${snap.error.toString()}"); // <--- Changed here
-            }
-          }
-
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Text("Loading......");
-          }
-
-          return ListView(
-            children: snap.data!.docs.map((doc) => _messageitem(doc)).toList(),
-          );
-        });
+  // Define the delete chat button
+  Widget _deleteChatButton(Map room_id, Map password) {
+    return IconButton(
+      // Define the onPressed callback
+      onPressed: () async {
+        // Show a dialog to confirm deletion
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Do you want to delete this chat?'),
+              content: const Text(
+                  'This chat will be securely deleted from your device and our servers.'),
+              actions: [
+                // Add a cancel button
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    // Pop the dialog
+                    Navigator.of(context).pop();
+                  },
+                ),
+                // Add a confirm button
+                TextButton(
+                  child: const Text('Confirm'),
+                  onPressed: () async {
+                    // Delete the chat
+                    await _chat.deleteChat(
+                        room_id['room_id'], password['password']);
+                    // Remove the room
+                    await _chat.removeRoom();
+                    // Navigate to the root route
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+      // Set the icon
+      icon: Icon(Icons.exit_to_app),
+    );
   }
 
-  Widget _messageitem(DocumentSnapshot doc) {
+  // Define the chat header
+  Widget _chatHeader(Map room_id, Map password) {
+    return Container(
+      // Set the decoration
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
+      // Set the margin and padding
+      margin: EdgeInsets.all(10),
+      padding: EdgeInsets.all(10),
+      // Define the child
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Add the room ID text
+          Text("RoomId:  ${room_id['room_id']}"),
+          // Add the password text
+          Text("Password: ${password['password']}"),
+        ],
+      ),
+    );
+  }
+
+  // Define the message list
+  Widget _messageList(String room_id, String password) {
+    return StreamBuilder(
+      // Get the messages stream
+      stream: _chat.getMessages(room_id, password),
+      builder: (context, snap) {
+        // Check for errors
+        if (snap.hasError) {
+          return Text("Error: ${snap.error.toString()}");
+        }
+
+        // Check for waiting state
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        // Return the ListView
+        return ListView(
+          children: snap.data!.docs.map((doc) => _messageItem(doc)).toList(),
+        );
+      },
+    );
+  }
+
+  // Define
+  Widget _messageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     String username = _auth.currentUser!.uid;
-    print(data["message"]);
 
     return ChatBubble(
-        alignment: data['senderId'] == username
-            ? Alignment.centerRight
-            : Alignment.centerLeft,
-        message: data['message']);
+      alignment: data['senderId'] == username
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
+      message: data['message'],
+    );
   }
 }

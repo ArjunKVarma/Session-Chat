@@ -24,7 +24,7 @@ class ChatService {
         text: message,
         id: "100",
         createdAt: time,
-        ReciverId: room_id,
+        reciverId: room_id,
         senderId: user.uid,
         sendermail: user.email!);
 
@@ -65,9 +65,9 @@ class ChatService {
         .collection('messages')
         .get()
         .then((querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
+      for (var doc in querySnapshot.docs) {
         doc.reference.delete();
-      });
+      }
     });
     await _firestore.collection('ChatRooms').doc(id).delete();
   }
@@ -103,16 +103,11 @@ class ChatService {
 
   // Remove current Users RoomId
   Future<void> removeRoom() async {
-    print('Removing room_id from user document...');
     final user = _auth.currentUser!;
     final userDocRef = _firestore.collection("Users").doc(user.uid);
     final userDoc = await userDocRef.get();
     if (userDoc.exists) {
-      print('User document found. Updating...');
       await userDocRef.update({"room_id": FieldValue.delete()});
-      print('Room_id field deleted.');
-    } else {
-      print('User document not found.');
-    }
+    } else {}
   }
 }

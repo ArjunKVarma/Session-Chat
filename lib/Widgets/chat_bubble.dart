@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 class ChatBubble extends StatelessWidget {
   final String message;
   final Alignment alignment;
-  const ChatBubble({Key? key, required this.alignment, required this.message})
-      : super(key: key);
+  const ChatBubble({super.key, required this.alignment, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class ChatBubble extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   message,
-                  style: TextStyle(color: Colors.black),
+                  style: const TextStyle(color: Colors.black),
                 ),
               ),
             ],
