@@ -51,18 +51,20 @@ class LoginPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Login',
+                        'Welcome Back',
                         style: TextStyle(
                             fontFamily: '<Roboto>',
-                            fontSize: 30,
+                            fontSize: 25,
                             fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        "Welcome back!",
+                        "Login to your existing Account",
                         style: TextStyle(
-                          fontSize: 20,
+                          fontWeight: FontWeight.w200,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -70,8 +72,10 @@ class LoginPage extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Image.network(
-                      'https://my.alfred.edu/zoom/_images/foster-lake.jpg'),
+                  child: Image(
+                    image: AssetImage('assets/images/icon_nb.png'),
+                    height: 300,
+                  ),
                 ),
                 Form(
                     key: _formkey,
@@ -88,8 +92,8 @@ class LoginPage extends StatelessWidget {
                             },
                             controller: usernameController,
                             decoration: InputDecoration(
-                                hintText: 'Enter username',
-                                border: OutlineInputBorder()),
+                              hintText: 'Enter username',
+                            ),
                           ),
                         ),
                         Padding(
@@ -104,8 +108,8 @@ class LoginPage extends StatelessWidget {
                               return null;
                             },
                             decoration: InputDecoration(
-                                hintText: 'Enter Password',
-                                border: OutlineInputBorder()),
+                              hintText: 'Enter Password',
+                            ),
                           ),
                         ),
                       ],
@@ -116,7 +120,10 @@ class LoginPage extends StatelessWidget {
                     onPressed: () {
                       validate(context);
                     },
-                    child: Text("Sign-In"),
+                    child: Padding(
+                      padding: const EdgeInsets.all(13.0),
+                      child: Text("Sign-In"),
+                    ),
                     style: ElevatedButton.styleFrom(
                       shape: BeveledRectangleBorder(),
                       foregroundColor: Colors.black,

@@ -51,27 +51,29 @@ class RegisterPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Login',
+                        'Register',
                         style: TextStyle(
                             fontFamily: '<Roboto>',
-                            fontSize: 30,
+                            fontSize: 25,
                             fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        "Welcome back!",
+                        "Create a new account",
                         style: TextStyle(
-                          fontSize: 20,
-                        ),
+                            fontSize: 20, fontWeight: FontWeight.w200),
                       ),
                     ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Image.network(
-                      'https://my.alfred.edu/zoom/_images/foster-lake.jpg'),
+                  child: Image(
+                    image: AssetImage('assets/images/icon_nb.png'),
+                    height: 200,
+                  ),
                 ),
                 Form(
                     key: _formkey,
@@ -88,8 +90,8 @@ class RegisterPage extends StatelessWidget {
                             },
                             controller: usernameController,
                             decoration: InputDecoration(
-                                hintText: 'Enter username',
-                                border: OutlineInputBorder()),
+                              hintText: 'Enter username',
+                            ),
                           ),
                         ),
                         Padding(
@@ -104,8 +106,8 @@ class RegisterPage extends StatelessWidget {
                               return null;
                             },
                             decoration: InputDecoration(
-                                hintText: 'Enter Password',
-                                border: OutlineInputBorder()),
+                              hintText: 'Enter Password',
+                            ),
                           ),
                         ),
                         Padding(
@@ -121,8 +123,8 @@ class RegisterPage extends StatelessWidget {
                               return null;
                             },
                             decoration: InputDecoration(
-                                hintText: 'Confirm Password',
-                                border: OutlineInputBorder()),
+                              hintText: 'Confirm Password',
+                            ),
                           ),
                         ),
                       ],
@@ -133,7 +135,10 @@ class RegisterPage extends StatelessWidget {
                     onPressed: () {
                       validate(context);
                     },
-                    child: Text("Sign-In"),
+                    child: Padding(
+                      padding: const EdgeInsets.all(13.0),
+                      child: Text("Register"),
+                    ),
                     style: ElevatedButton.styleFrom(
                       shape: BeveledRectangleBorder(),
                       foregroundColor: Colors.black,

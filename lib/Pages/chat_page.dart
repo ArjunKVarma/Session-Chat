@@ -46,13 +46,25 @@ class _ChatPageState extends State<ChatPage> {
           _deleteChatButton(room_id, password),
         ],
         // Set the title
-        title: const Text(_appTitle),
+        title: Row(
+          children: [
+            const Text(_appTitle),
+            ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.transparent),
+                ),
+                onPressed: () =>
+                    showAutoDismissAlert(context, room_id, password),
+                child: const Icon(
+                  Icons.info_outline,
+                  color: Colors.white,
+                ))
+          ],
+        ),
       ),
       // Define the body
       body: Column(
         children: [
-          // Add the chat header
-          _chatHeader(room_id, password),
           // Add the message list
           Expanded(
               child: _messageList(room_id['room_id'], password['password'])),
@@ -111,30 +123,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // Define the chat header
-  Widget _chatHeader(Map room_id, Map password) {
-    return Container(
-      // Set the decoration
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-      ),
-      // Set the margin and padding
-      margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(10),
-      // Define the child
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Add the room ID text
-          Text("RoomId:  ${room_id['room_id']}"),
-          // Add the password text
-          Text("Password: ${password['password']}"),
-        ],
-      ),
-    );
-  }
-
   // Define the message list
   Widget _messageList(String room_id, String password) {
     return StreamBuilder(
@@ -169,6 +157,30 @@ class _ChatPageState extends State<ChatPage> {
           ? Alignment.centerRight
           : Alignment.centerLeft,
       message: data['message'],
+    );
+  }
+
+  void showAutoDismissAlert(BuildContext context, Map room_id, password) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Return the AlertDialog widget
+        return Container(
+          alignment: Alignment.topCenter,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Text("Room data"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Room_id = ${room_id['room_id']}"),
+                Text("Password = ${password['password']}")
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
