@@ -1,5 +1,6 @@
 // Import necessary packages
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/chat_service.dart';
@@ -19,7 +20,7 @@ class _ChatPageState extends State<ChatPage> {
   // Initialize Firebase Authentication and ChatService instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final ChatService _chat = ChatService();
-
+  final ScrollController _scrollController = ScrollController();
   // Define the app title
   static const String _appTitle = "SessionChat";
 
@@ -72,6 +73,9 @@ class _ChatPageState extends State<ChatPage> {
           ChatInput(
             room_id: room_id['room_id'],
             password: password['password'],
+            ScollBottomCall: () {
+              scrolltoBottom(); // Call the scrollToBottom function
+            },
           ),
         ],
       ),
@@ -119,7 +123,7 @@ class _ChatPageState extends State<ChatPage> {
         );
       },
       // Set the icon
-      icon: Icon(Icons.exit_to_app),
+      icon: Icon(Icons.delete_forever),
     );
   }
 
@@ -141,6 +145,7 @@ class _ChatPageState extends State<ChatPage> {
 
         // Return the ListView
         return ListView(
+          controller: _scrollController,
           children: snap.data!.docs.map((doc) => _messageItem(doc)).toList(),
         );
       },
@@ -174,13 +179,34 @@ class _ChatPageState extends State<ChatPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Room_id = ${room_id['room_id']}"),
-                Text("Password = ${password['password']}")
+                Row(
+                  children: [
+                    Text("Room ID : "),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("${room_id['room_id']}"),
+                    ),
+                  ],
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Password : ${password['password']}"),
+                ),
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  void scrolltoBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.ease,
+      );
+    }
   }
 }

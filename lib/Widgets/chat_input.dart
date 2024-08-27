@@ -1,19 +1,26 @@
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sessionchat/Pages/homepage.dart';
 import 'package:sessionchat/Services/chat_service.dart';
+import 'package:flutter/foundation.dart' as foundation;
 
 class ChatInput extends StatelessWidget {
   final String room_id;
   final String password;
   final chatMessageControllrer = TextEditingController();
   final ChatService _chat = ChatService();
-
+  final VoidCallback ScollBottomCall;
   void send() async {
     await _chat.sendMessage(room_id, password, chatMessageControllrer.text);
   }
 
-  ChatInput({Key? key, required this.room_id, required this.password})
-      : super(key: key);
+  ChatInput({
+    Key? key,
+    required this.room_id,
+    required this.password,
+    required this.ScollBottomCall,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,7 +42,7 @@ class ChatInput extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Center(
-                            child: Text("This section is under Development"),
+                            child: Text("s"),
                           ),
                         ],
                       ),
@@ -47,6 +54,7 @@ class ChatInput extends StatelessWidget {
           ),
           Expanded(
               child: TextField(
+                  onTap: ScollBottomCall,
                   controller: chatMessageControllrer,
                   keyboardType: TextInputType.multiline,
                   style: TextStyle(
@@ -59,6 +67,7 @@ class ChatInput extends StatelessWidget {
                       )))),
           IconButton(
             onPressed: () {
+              ScollBottomCall();
               if (chatMessageControllrer.text.isNotEmpty) {
                 send();
                 chatMessageControllrer.clear();
