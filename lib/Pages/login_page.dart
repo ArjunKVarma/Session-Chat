@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/auth.dart';
+import 'package:sessionchat/Widgets/elevatedbutton.dart';
+import 'package:sessionchat/Widgets/input_box.dart';
 
 class LoginPage extends StatelessWidget {
-  LoginPage({Key? key}) : super(key: key);
+  LoginPage({super.key});
 
   final _formkey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
@@ -27,14 +29,8 @@ class LoginPage extends StatelessWidget {
 
   void validate(context) async {
     if (_formkey.currentState != null && _formkey.currentState!.validate()) {
-      print(usernameController.text);
-      print(passwordController.text);
-
-      print('login successful!');
       signin(context);
-    } else {
-      print('login failed!');
-    }
+    } else {}
   }
 
   @override
@@ -42,14 +38,14 @@ class LoginPage extends StatelessWidget {
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.primary,
         body: Container(
-          margin: EdgeInsets.all(20),
+          margin: const EdgeInsets.all(20),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -70,8 +66,8 @@ class LoginPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Image(
                     image: AssetImage('assets/images/icon_nb.png'),
                     height: 300,
@@ -81,68 +77,50 @@ class LoginPage extends StatelessWidget {
                     key: _formkey,
                     child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value != null && value.length < 3) {
-                                return 'Username must contain atleat 3 letters';
-                              }
-                              return null;
-                            },
-                            controller: usernameController,
-                            decoration: InputDecoration(
-                              hintText: 'Enter username',
-                            ),
-                          ),
+                        InputBox(
+                          controller: usernameController,
+                          hintText: 'Enter username',
+                          validator: (value) {
+                            if (value != null && value.length < 3) {
+                              return 'Username must contain at least 3 letters';
+                            }
+                            return null;
+                          },
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: passwordController,
-                            obscureText: true,
-                            validator: (value) {
-                              if (value != null && value.length < 5) {
-                                return 'Password must contain 5 letters';
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Enter Password',
-                            ),
-                          ),
+                        InputBox(
+                          controller: passwordController,
+                          hintText: 'Enter Password',
+                          validator: (value) {
+                            if (value != null && value.length < 5) {
+                              return 'Password must contain 5 letters';
+                            }
+                            return null;
+                          },
+                          obscureText: true,
                         ),
                       ],
                     )),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
+                  child: CustomElevatedButton(
+                    text: "Sign-In",
+                    onPressed: () async {
                       validate(context);
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(13.0),
-                      child: Text("Sign-In"),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      shape: BeveledRectangleBorder(),
-                      foregroundColor: Colors.black,
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                    ),
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Don\'t Have an account? "),
+                      const Text("Don't Have an account? "),
                       TextButton(
                           onPressed: () {
                             Navigator.pushReplacementNamed(
                                 context, '/register');
                           },
-                          child: Text(
+                          child: const Text(
                             "Register Now! ",
                             style: TextStyle(color: Colors.white),
                           ))

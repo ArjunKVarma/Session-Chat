@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/auth.dart';
+import 'package:sessionchat/Widgets/elevatedbutton.dart';
 
 class RegisterPage extends StatelessWidget {
-  RegisterPage({Key? key}) : super(key: key);
+  RegisterPage({super.key});
 
   final _formkey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
@@ -25,16 +26,10 @@ class RegisterPage extends StatelessWidget {
 
   void validate(context) {
     if (_formkey.currentState != null && _formkey.currentState!.validate()) {
-      print(usernameController.text);
-      print(passwordController.text);
-
-      print('login successful!');
       signup(context);
       Navigator.pushReplacementNamed(context, '/login',
           arguments: usernameController.text);
-    } else {
-      print('not successful!');
-    }
+    } else {}
   }
 
   @override
@@ -42,14 +37,14 @@ class RegisterPage extends StatelessWidget {
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.primary,
         body: Container(
-          margin: EdgeInsets.all(20),
+          margin: const EdgeInsets.all(20),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -68,8 +63,8 @@ class RegisterPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Image(
                     image: AssetImage('assets/images/icon_nb.png'),
                     height: 200,
@@ -89,7 +84,7 @@ class RegisterPage extends StatelessWidget {
                               return null;
                             },
                             controller: usernameController,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: 'Enter username',
                             ),
                           ),
@@ -105,7 +100,7 @@ class RegisterPage extends StatelessWidget {
                               }
                               return null;
                             },
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: 'Enter Password',
                             ),
                           ),
@@ -122,7 +117,7 @@ class RegisterPage extends StatelessWidget {
                               }
                               return null;
                             },
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: 'Confirm Password',
                             ),
                           ),
@@ -131,32 +126,24 @@ class RegisterPage extends StatelessWidget {
                     )),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
+                  child: CustomElevatedButton(
+                    text: "Create Account",
+                    onPressed: () async {
                       validate(context);
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(13.0),
-                      child: Text("Register"),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      shape: BeveledRectangleBorder(),
-                      foregroundColor: Colors.black,
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                    ),
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Already Have an account? "),
+                      const Text("Already Have an account? "),
                       TextButton(
                           onPressed: () {
                             Navigator.pushReplacementNamed(context, '/login');
                           },
-                          child: Text(
+                          child: const Text(
                             "Login! ",
                             style: TextStyle(color: Colors.white),
                           ))

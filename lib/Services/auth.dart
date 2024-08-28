@@ -1,29 +1,55 @@
+// Import the necessary package for working with Firebase Authentication
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Define a class called AuthService to handle authentication-related tasks
 class AuthService {
+  // Create an instance of FirebaseAuth, which is the Firebase Authentication service
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<UserCredential> signin(String email, password) async {
+  // Define a method called signin to sign in a user with an email and password
+  Future<UserCredential> signin(String email, String password) async {
     try {
+      // Attempt to sign in the user with the provided email and password
+      // using the signInWithEmailAndPassword method of FirebaseAuth
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
+        // The email address of the user
+        email: email,
+        // The password of the user
+        password: password,
+      );
+      // Return the UserCredential object, which contains information about the signed-in user
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      // Catch any FirebaseAuthException that may occur during the sign-in process
+      // and throw an Exception with the error code
       throw Exception(e.code);
     }
   }
 
-  Future<UserCredential> signup(String email, password) async {
+  // Define a method called signup to sign up a new user with an email and password
+  Future<UserCredential> signup(String email, String password) async {
     try {
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
+      // Attempt to create a new user with the provided email and password
+      // using the createUserWithEmailAndPassword method of FirebaseAuth
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        // The email address of the new user
+        email: email,
+        // The password of the new user
+        password: password,
+      );
+      // Return the UserCredential object, which contains information about the newly created user
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      // Catch any FirebaseAuthException that may occur during the sign-up process
+      // and throw an Exception with the error code
       throw Exception(e.code);
     }
   }
 
+  // Define a method called logout to sign out the current user
   Future<void> logout() async {
+    // Attempt to sign out the current user using the signOut method of FirebaseAuth
     return await _auth.signOut();
   }
 }

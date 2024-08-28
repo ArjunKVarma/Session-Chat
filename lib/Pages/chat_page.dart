@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/chat_service.dart';
+import 'package:sessionchat/Utils/functions.dart';
 import 'package:sessionchat/Widgets/chat_bubble.dart';
 import 'package:sessionchat/Widgets/chat_input.dart';
 
@@ -20,7 +21,10 @@ class _ChatPageState extends State<ChatPage> {
   // Initialize Firebase Authentication and ChatService instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final ChatService _chat = ChatService();
+
+  // initialising Scrollccontroller for chatpage
   final ScrollController _scrollController = ScrollController();
+  final Functions _functions = Functions();
   // Define the app title
   static const String _appTitle = "SessionChat";
 
@@ -55,7 +59,7 @@ class _ChatPageState extends State<ChatPage> {
                   backgroundColor: WidgetStateProperty.all(Colors.transparent),
                 ),
                 onPressed: () =>
-                    showAutoDismissAlert(context, room_id, password),
+                    _functions.showAutoDismissAlert(context, room_id, password),
                 child: const Icon(
                   Icons.info_outline,
                   color: Colors.white,
@@ -74,7 +78,8 @@ class _ChatPageState extends State<ChatPage> {
             room_id: room_id['room_id'],
             password: password['password'],
             ScollBottomCall: () {
-              scrolltoBottom(); // Call the scrollToBottom function
+              _functions.scrollToBottom(
+                  _scrollController); // Call the scrollToBottom function
             },
           ),
         ],
@@ -123,7 +128,7 @@ class _ChatPageState extends State<ChatPage> {
         );
       },
       // Set the icon
-      icon: Icon(Icons.delete_forever),
+      icon: const Icon(Icons.delete_forever),
     );
   }
 
@@ -135,12 +140,12 @@ class _ChatPageState extends State<ChatPage> {
       builder: (context, snap) {
         // Check for errors
         if (snap.hasError) {
-          return Text("Error: ${snap.error.toString()}");
+          return const Center(child: Text("This chat room doesn't exist"));
         }
 
         // Check for waiting state
         if (snap.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         // Return the ListView
@@ -162,51 +167,7 @@ class _ChatPageState extends State<ChatPage> {
           ? Alignment.centerRight
           : Alignment.centerLeft,
       message: data['message'],
+      type: data['type'],
     );
-  }
-
-  void showAutoDismissAlert(BuildContext context, Map room_id, password) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        // Return the AlertDialog widget
-        return Container(
-          alignment: Alignment.topCenter,
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Text("Room data"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text("Room ID : "),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("${room_id['room_id']}"),
-                    ),
-                  ],
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("Password : ${password['password']}"),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void scrolltoBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.ease,
-      );
-    }
   }
 }

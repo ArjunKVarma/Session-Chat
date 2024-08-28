@@ -40,6 +40,9 @@ dependencies:
   cloud_firestore: ^5.2.1
   word_generator: ^0.4.4
   emoji_picker_flutter: ^2.2.0
+  uuid: ^4.4.2
+  image_picker: ^1.1.2
+  firebase_storage: ^12.2.0
 
   
 
