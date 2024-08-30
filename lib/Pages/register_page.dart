@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/auth.dart';
 import 'package:sessionchat/Widgets/elevatedbutton.dart';
@@ -10,25 +11,32 @@ class RegisterPage extends StatelessWidget {
   final passwordController = TextEditingController();
   final confirmpasscontroller = TextEditingController();
 
-  void signup(context) {
+  void signup(context) async {
     final AuthService _auth = AuthService();
 
     try {
-      _auth.signup(usernameController.text, passwordController.text);
-    } catch (e) {
+      await _auth.signup(usernameController.text, passwordController.text);
+      Navigator.pushNamed(context, '/home', arguments: usernameController.text);
+    } on Exception catch (e) {
       showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-                title: Text('Error: ${e.toString()}'),
-              ));
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Text(
+              e.toString(),
+              style: const TextStyle(fontSize: 20),
+            ),
+          );
+        },
+      );
     }
   }
 
   void validate(context) {
     if (_formkey.currentState != null && _formkey.currentState!.validate()) {
       signup(context);
-      Navigator.pushReplacementNamed(context, '/login',
-          arguments: usernameController.text);
     } else {}
   }
 

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sessionchat/Services/auth.dart';
 import 'package:sessionchat/Widgets/elevatedbutton.dart';
@@ -16,14 +17,20 @@ class LoginPage extends StatelessWidget {
       await auth.signin(usernameController.text, passwordController.text);
       Navigator.pushReplacementNamed(context, '/home',
           arguments: usernameController.text);
-    } catch (e) {
+    } on Exception catch (e) {
       showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Text('Error: ${e.toString()}'),
-            );
-          });
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Text(
+              e.toString(),
+              style: const TextStyle(fontSize: 20),
+            ),
+          );
+        },
+      );
     }
   }
 

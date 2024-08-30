@@ -13,7 +13,8 @@ class AuthService {
       // using the signInWithEmailAndPassword method of FirebaseAuth
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         // The email address of the user
-        email: email,
+        // Create a sample gmail for Firebase using input username
+        email: ("$email@gmail.com").trim(),
         // The password of the user
         password: password,
       );
@@ -22,19 +23,22 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       // Catch any FirebaseAuthException that may occur during the sign-in process
       // and throw an Exception with the error code
+
       throw Exception(e.code);
     }
   }
 
   // Define a method called signup to sign up a new user with an email and password
-  Future<UserCredential> signup(String email, String password) async {
+  Future<UserCredential?> signup(String email, String password) async {
     try {
       // Attempt to create a new user with the provided email and password
       // using the createUserWithEmailAndPassword method of FirebaseAuth
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         // The email address of the new user
-        email: email,
+        // Create a sample gmail for Firebase using input username
+
+        email: ("$email@gmail.com").trim(),
         // The password of the new user
         password: password,
       );
