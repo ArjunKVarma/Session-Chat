@@ -13,10 +13,12 @@ Key features:
 
 
 ### Screenshots
+<p float="left">
 <img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/home.jpg" alt="Home" width="200" height="auto">
 <img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/chat.jpg" alt="Chat" width="200" height="auto">
 <img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/login.jpg" alt="Login" width="200" height="auto">
 <img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/delete.jpg" alt="Delete" width="200" height="auto">
+</p>
 
 
 
