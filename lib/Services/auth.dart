@@ -1,5 +1,6 @@
 // Import the necessary package for working with Firebase Authentication
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Define a class called AuthService to handle authentication-related tasks
 class AuthService {
@@ -18,6 +19,7 @@ class AuthService {
         // The password of the user
         password: password,
       );
+      
       // Return the UserCredential object, which contains information about the signed-in user
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -42,6 +44,16 @@ class AuthService {
         // The password of the new user
         password: password,
       );
+
+      //Add user to users collection
+      // Get the newly created user's UID
+      String uid = userCredential.user!.uid;
+
+      // Create a new document in the "users" collection with the user's UID
+      FirebaseFirestore.instance.collection('Users').doc(uid).set({
+        'username': email,
+        'uid': uid,
+      });
       // Return the UserCredential object, which contains information about the newly created user
       return userCredential;
     } on FirebaseAuthException catch (e) {
