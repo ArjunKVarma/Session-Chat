@@ -29,3 +29,11 @@ After cloning to your machine, go to the projects root directory and execute  co
 ```sh
 flutter pub get 
 ```
+
+
+### Architecture and program flow
+<img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Diagrams/sessions-architecture-w.png" alt="Diagram" width="600" height="auto">
+
+
+*Thankyou for reading. Contribute to this project to make it a bug free, stable experience*
+
