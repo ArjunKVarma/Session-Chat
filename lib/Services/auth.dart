@@ -7,15 +7,13 @@ class AuthService {
   // Create an instance of FirebaseAuth, which is the Firebase Authentication service
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Define a method called signin to sign in a user with an email and password
-  Future<UserCredential> signin(String email, String password) async {
+  // Define a method called signin to sign in a user with a username and password
+  Future<UserCredential> signin(String username, String password) async {
     try {
-      // Attempt to sign in the user with the provided email and password
-      // using the signInWithEmailAndPassword method of FirebaseAuth
+      // Attempt to sign in the user with the provided username and password
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        // The email address of the user
         // Create a sample gmail for Firebase using input username
-        email: ("$email@gmail.com").trim(),
+        email: ("$username@gmail.com").trim(),
         // The password of the user
         password: password,
       );
@@ -23,42 +21,33 @@ class AuthService {
       // Return the UserCredential object, which contains information about the signed-in user
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      // Catch any FirebaseAuthException that may occur during the sign-in process
-      // and throw an Exception with the error code
-
       throw Exception(e.code);
     }
   }
 
-  // Define a method called signup to sign up a new user with an email and password
-  Future<UserCredential?> signup(String email, String password) async {
+  // Define a method called signup to sign up a new user with a username and password
+  Future<UserCredential?> signup(String username, String password) async {
     try {
-      // Attempt to create a new user with the provided email and password
-      // using the createUserWithEmailAndPassword method of FirebaseAuth
+      // Attempt to create a new user with the provided username and password
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
-        // The email address of the new user
         // Create a sample gmail for Firebase using input username
-
-        email: ("$email@gmail.com").trim(),
+        email: ("$username@gmail.com").trim(),
         // The password of the new user
         password: password,
       );
 
-      //Add user to users collection
       // Get the newly created user's UID
       String uid = userCredential.user!.uid;
 
       // Create a new document in the "users" collection with the user's UID
-      FirebaseFirestore.instance.collection('Users').doc(uid).set({
-        'username': email,
+      await FirebaseFirestore.instance.collection('Users').doc(uid).set({
+        'username': username,
         'uid': uid,
       });
-      // Return the UserCredential object, which contains information about the newly created user
+      // Return the UserCredential object
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      // Catch any FirebaseAuthException that may occur during the sign-up process
-      // and throw an Exception with the error code
       throw Exception(e.code);
     }
   }

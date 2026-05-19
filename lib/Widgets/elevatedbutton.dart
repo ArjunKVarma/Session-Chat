@@ -4,24 +4,47 @@ class CustomElevatedButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
 
-  CustomElevatedButton({Key? key, required this.onPressed, required this.text})
-      : super(key: key);
+  const CustomElevatedButton({super.key, required this.onPressed, required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(5)),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        foregroundColor: Colors.black,
-        shadowColor: Colors.transparent,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF38BDF8).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(13.0),
-        child: Text(text),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Center(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

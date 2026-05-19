@@ -1,4 +1,4 @@
-// Import the necessary package for Flutter development
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 // Define a class called 'Functions' to encapsulate all the reusable functions
@@ -26,49 +26,127 @@ class Functions {
   /// @param roomId A Map containing the room ID.
   /// @param password A Map containing the password.
   void showAutoDismissAlert(BuildContext context, Map roomId, password) {
-    // Show a dialog using the showDialog function
-    showDialog(
-      // Pass the parent widget's BuildContext instance
+    showGeneralDialog(
       context: context,
-      // Define the dialog's builder function
-      builder: (context) {
-        // Return the AlertDialog widget
-        return Container(
-          // Center the dialog horizontally
-          alignment: Alignment.topCenter,
-          child: AlertDialog(
-            // Set the dialog's shape to a rounded rectangle with a 5-pixel radius
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            // Set the dialog's title
-            title: const Text("Room data"),
-            // Define the dialog's content
-            content: Column(
-              // Set the column's main axis size to the minimum size
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Display the room ID
-                Row(
-                  children: [
-                    const Text("Room ID : "),
-                    // Align the room ID text to the left
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("${roomId['room_id']}"),
+      barrierDismissible: true,
+      barrierLabel: "Room Info",
+      barrierColor: Colors.black.withOpacity(0.1),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                    child: Container(
+                      width: 300,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Color(0xFF38BDF8), size: 24),
+                              const SizedBox(width: 8),
+                              const Text(
+                                "Room Info",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                                onPressed: () => Navigator.pop(context),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildInfoRow(Icons.meeting_room, "Room ID", "${roomId['room_id']}"),
+                          const SizedBox(height: 12),
+                          _buildInfoRow(Icons.lock_outline, "Password", "${password['password']}"),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-                // Display the password
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("Password : ${password['password']}"),
-                ),
-              ],
+              ),
             ),
           ),
         );
       },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, -0.2),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          )),
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white70, size: 20),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

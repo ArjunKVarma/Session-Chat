@@ -1,11 +1,13 @@
 // Importing necessary packages
+import 'dart:convert';
 import 'dart:io'; // For File type
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Firestore database
 import 'package:firebase_auth/firebase_auth.dart'; // For Firebase Authentication
-import 'package:firebase_storage/firebase_storage.dart'; // For Firebase Storage
 import 'package:image_picker/image_picker.dart'; // For image picking
 import 'package:sessionchat/models/message_file.dart'; // For custom MessageFile model
 import 'package:uuid/uuid.dart'; // For generating unique IDs
+import 'package:sessionchat/Services/encryption_service.dart'; // For E2E Encryption
+import 'package:crypto/crypto.dart';
 
 // Defining the ChatService class
 class ChatService {
@@ -15,8 +17,15 @@ class ChatService {
   // Initializing Firebase Authentication instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Declaring a variable to store the selected image file from gallery
-  File? image;
+  /// Generate a secure, deterministic room ID from the name and password
+  String _getRoomId(String roomId, String password) {
+    List<String> ids = [roomId, password];
+    ids.sort();
+    String combined = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    // Hash the combined string so the password is never visible in Firestore
+    return sha256.convert(utf8.encode(combined)).toString();
+  }
+
 
   // Defining a method to get a stream of users from Firestore
   Stream<List<Map<String, dynamic>>> getUsersStream() {
@@ -35,41 +44,38 @@ class ChatService {
 
   // Defining a method to send a message to a chat room
   Future<void> sendMessage(
-      // The ID of the chat room to send the message to
       String roomId,
-      // The password for the chat room (not used for authentication, but for generating a unique ID)
-      password,
-      // The text of the message to be sent
-      message,
-      // The type of the message (e.g. text, image, etc.)
-      type,
-      // An optional message ID, used to update an existing message
-      String? messageid) async {
+      String password,
+      String message,
+      String type,
+      {String? messageid,
+      String? replyTo,
+      String? replyText}) async {
     // Getting the current authenticated user
     final user = _auth.currentUser!;
 
     // Getting the current timestamp
     final Timestamp time = Timestamp.now();
 
-    // Creating a list of IDs to generate a unique chat room ID
-    List<String> ids = [roomId, password];
-
     // Sorting the list of IDs to ensure consistency
-    ids.sort();
-
-    // Joining the sorted IDs with a hyphen, trimming, converting to lowercase, and removing spaces
-    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    String id = _getRoomId(roomId, password);
 
     // Generating a unique message ID if none is provided
     final mesId =
         (messageid == null) ? const Uuid().v1().toString() : messageid;
 
+    // Encrypting the message content
+    final encryptedMessage = EncryptionService.encryptText(message, password);
+    final encryptedReplyText = replyText != null 
+        ? EncryptionService.encryptText(replyText, password) 
+        : null;
+
     // Creating a new Message object with the provided data
     Message newMessage = Message(
         // The type of the message
         type: type,
-        // The text of the message
-        text: message,
+        // The text of the message (encrypted)
+        text: encryptedMessage,
         // The unique ID of the message
         id: mesId,
         // The timestamp of when the message was sent
@@ -78,8 +84,11 @@ class ChatService {
         reciverId: roomId,
         // The ID of the user sending the message
         senderId: user.uid,
-        // The email of the user sending the message
-        sendermail: user.email!);
+        // The username of the user sending the message
+        senderUsername: user.email!.split('@').first,
+        // Reply info
+        replyTo: replyTo,
+        replyText: encryptedReplyText);
 
     // Using Firestore to set the new message in the 'messages' subcollection of the chat room document
     await _firestore
@@ -97,14 +106,8 @@ class ChatService {
       String roomId,
       // The password for the chat room (not used for authentication, but for generating a unique ID)
       password) async* {
-    // Creating a list of IDs to generate a unique chat room ID
-    List<String> ids = [roomId, password];
-
     // Sorting the list of IDs to ensure consistency
-    ids.sort();
-
-    // Joining the sorted IDs with a hyphen, trimming, converting to lowercase, and removing spaces
-    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    String id = _getRoomId(roomId, password);
 
     // Getting a reference to the chat room document in Firestore
     final chatRoomRef = _firestore.collection('ChatRooms').doc(id);
@@ -127,19 +130,22 @@ class ChatService {
     }
   }
 
-  /// Delete a chat room and all its associated messages and images
+  /// Delete a specific message from a chat room
+  Future<void> deleteMessage(String roomId, String password, String messageId) async {
+    String id = _getRoomId(roomId, password);
+
+    await _firestore
+        .collection('ChatRooms')
+        .doc(id)
+        .collection('messages')
+        .doc(messageId)
+        .delete();
+  }
+
+  /// Delete a chat room and all its associated messages
   Future<void> deleteChat(String roomId, String password) async {
-    // Create a list of IDs to sort and combine into a single ID
-    List<String> ids = [roomId, password];
-
-    // Sort the list of IDs to ensure consistency in the combined ID
-    ids.sort();
-
-    // Combine the sorted IDs into a single string, separated by hyphens
-    // Remove any leading or trailing whitespace, and convert to lowercase
-    // Replace any spaces with empty strings to ensure a clean ID
     // This is created to store and access the id of chatRoom
-    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    String id = _getRoomId(roomId, password);
 
     // Get a snapshot of the messages collection in the chat room
     final querySnapshot = await _firestore
@@ -148,19 +154,8 @@ class ChatService {
         .collection('messages') // Collection of messages in the chat room
         .get(); // Get the snapshot of the messages collection
 
-    // Iterate over each document in the messages collection
+    // Iterate over each document in the messages collection and delete it
     await Future.forEach(querySnapshot.docs, (doc) async {
-      // Check if the document represents an image message
-      if (doc.get('type') == 'image' && doc.get('message') != "") {
-        // Get a reference to the image storage location
-        final storageRef =
-            FirebaseStorage.instance.refFromURL(doc.get('message'));
-
-        // Delete the image from storage
-        await storageRef.delete();
-      }
-
-      // Delete the message document from the Firestore database
       await doc.reference.delete();
     });
 
@@ -168,23 +163,25 @@ class ChatService {
     await _firestore.collection('ChatRooms').doc(id).delete();
   }
 
-  /// Create a new chat room with the given room ID and password
-  void createChat(String roomId, String password) async {
-    // Create a list of IDs to sort and combine into a single ID
-    List<String> ids = [roomId, password];
-
-    // Sort the list of IDs to ensure consistency in the combined ID
-    ids.sort();
-
-    // Combine the sorted IDs into a single string, separated by hyphens
-    // Remove any leading or trailing whitespace, and convert to lowercase
-    // Replace any spaces with empty strings to ensure a clean ID
-    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+  Future<void> createChat(String roomId, String password) async {
+    String id = _getRoomId(roomId, password);
 
     // Create a new document in the 'ChatRooms' collection with the combined ID
-    // The document will be initialized with an empty object ({})
-    // This will effectively create a new chat room with the given ID and password
-    await _firestore.collection('ChatRooms').doc(id).set({});
+    // Set the admin field to the current user's UID
+    await _firestore.collection('ChatRooms').doc(id).set({
+      'admin': _auth.currentUser!.uid,
+    });
+  }
+
+  Future<bool> isAdmin(String roomId, String password) async {
+    String id = _getRoomId(roomId, password);
+
+    final doc = await _firestore.collection('ChatRooms').doc(id).get();
+    if (doc.exists && doc.data() != null && doc.data()!.containsKey('admin')) {
+      return doc.get('admin') == _auth.currentUser!.uid;
+    }
+    // For legacy rooms without an admin, no one is considered admin.
+    return false;
   }
 
   /// Get the current room ID of the currently authenticated user
@@ -208,18 +205,7 @@ class ChatService {
 
   /// Update the room ID of the currently authenticated user
   Future<void> setRoom(String roomId, String password) async {
-    // Create a list of IDs to sort and combine into a single ID
-    // This list contains the room ID and password, which will be used to create a unique ID
-    List<String> ids = [roomId, password];
-
-    // Sort the list of IDs to ensure consistency in the combined ID
-    // This is important to ensure that the same room ID and password always produce the same combined ID
-    ids.sort();
-
-    // Combine the sorted IDs into a single string, separated by hyphens
-    // Remove any leading or trailing whitespace, and convert to lowercase
-    // Replace any spaces with empty strings to ensure a clean ID
-    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
+    String id = _getRoomId(roomId, password);
 
     // Get a reference to the user's document in the "Users" collection
     // The document ID is the user's unique ID (UID)
@@ -254,84 +240,54 @@ class ChatService {
     }
   }
 
-  /// Get an image from the device's gallery and upload it to the server
+  /// Get an image from the device's gallery, compress it, and send as Base64
   Future<void> getImage(String roomId, String password) async {
-    // Create an instance of the ImagePicker class
-    // This class provides a way to pick images from the device's gallery or camera
     ImagePicker _picker = ImagePicker();
 
-    // Use the ImagePicker to pick an image from the device's gallery
-    // The `pickImage` method returns a `PickedFile` object, which contains the path to the selected image
-    final imgFile = await _picker.pickImage(source: ImageSource.gallery);
+    // Pick image with aggressive compression to fit in Firestore (1MB limit)
+    final imgFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 20, // Lower quality for reliability
+      maxWidth: 700,    // Smaller width
+    );
 
-    // Check if an image was selected
     if (imgFile != null) {
-      // Create a `File` object from the selected image path
-      // This `File` object can be used to upload the image to the server
-      image = File(imgFile.path);
+      final bytes = await imgFile.readAsBytes();
+      
+      // Check size (650KB limit to be safe with Base64 + Encryption overhead)
+      if (bytes.length > 650000) {
+        print("Image still too large after compression");
+        return;
+      }
 
-      // Call the `uploadFile` function to upload the selected image to the server
-      // Pass the `roomId` and `password` parameters to the `uploadFile` function
-      uploadFile(roomId, password);
+      final base64String = base64Encode(bytes);
+      
+      // Send as a single message (it will be encrypted inside sendMessage)
+      await sendMessage(roomId, password, base64String, "image");
     }
   }
 
-  /// Upload a file to Firebase Storage and update the message with the image URL
-  Future<void> uploadFile(String roomId, String password) async {
-    // Check if an image has been selected
-    if (image != null) {
-      // Generate a unique file name using a UUID
-      String fileName = const Uuid().v1();
+  /// Upload an audio file as Base64 (Note: limited to short clips due to 1MB limit)
+  Future<void> uploadAudio(String roomId, String password, String filePath) async {
+    final File audioFile = File(filePath);
+    if (!audioFile.existsSync()) return;
 
-      // Generate a unique message ID using a UUID
-      String mesId = const Uuid().v1();
+    try {
+      final bytes = await audioFile.readAsBytes();
+      
+      // Check if file is too large for Firestore (1MB limit)
+      if (bytes.length > 700000) { // ~700KB limit to account for Base64 + Encryption overhead
+        print("Audio file too large for database storage");
+        return;
+      }
 
-      // Send a message to the room with the image type and message ID
-      await sendMessage(roomId, password, "", "image", mesId);
-
-      // Create a reference to the Firebase Storage bucket
-      final ref =
-          FirebaseStorage.instance.ref().child('images').child("$fileName.jpg");
-
-      // Upload the image file to Firebase Storage
-      var fileUploadTask = await ref.putFile(image!).catchError((error) {
-        // Catch any errors that occur during the upload process
-        throw error;
-      });
-
-      // Get the download URL of the uploaded image
-      String ImageUrl = await fileUploadTask.ref.getDownloadURL();
-
-      // Update the message with the image URL
-      await updateMessage(roomId, password, ImageUrl, mesId);
+      final base64String = base64Encode(bytes);
+      await sendMessage(roomId, password, base64String, "audio");
+    } catch (e) {
+      print("Error processing audio: $e");
+    } finally {
+      // Clean up local file
+      if (audioFile.existsSync()) audioFile.deleteSync();
     }
-  }
-
-  /// Update a message in the Firestore database with the image URL
-  Future<void> updateMessage(
-      String roomId, String password, String imageUrl, String mesId) async {
-    // Create a list of IDs to generate a unique document ID
-    List<String> ids = [roomId, password];
-
-    // Sort the list of IDs to ensure consistency
-    ids.sort();
-
-    // Join the sorted IDs with a hyphen and trim any whitespace
-    String id = ids.join('-').trim().toLowerCase().replaceAll(" ", '');
-
-    // Get a reference to the Firestore database
-    // Specifically, get a reference to the 'ChatRooms' collection
-    // Then, get a reference to the document with the generated ID
-    // Finally, get a reference to the 'messages' subcollection
-    // and the document with the message ID
-    await _firestore
-        .collection('ChatRooms')
-        .doc(id)
-        .collection('messages')
-        .doc(mesId)
-        .update({'message': imageUrl});
-
-    // Update the message document with the image URL
-    // This will overwrite the existing message with the new image URL
   }
 }

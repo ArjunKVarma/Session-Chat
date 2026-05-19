@@ -1,39 +1,53 @@
-# Sessions-Chat
+# Sessions — Private Secure Chat Rooms
 
-Sessions is a realtime chat application that helps you chat with friends and collegues. The app works based on rooms that has three english words as Id and a password. Users can create and join these rooms with the Id and password and communicate using text and images. Each session can be deleted after chat and the data will be cleared from both the device nad servers ensuring anonimity for users. Users can join the service without a real identification or phone numbers
+Sessions is a premium, real-time anonymous messaging application built with Flutter and Firebase. Designed around a **Zero-Knowledge Architecture**, Sessions prioritizes user privacy and security above all else. Users can create or join temporary secure rooms using a unique combination of three English words and a password, ensuring complete anonymity with no personal identification, phone numbers, or metadata trace.
 
-Key features: 
-
-- Unlock Conversations: Dive into cozy rooms with three simple English words as IDs. Share text, images, and secrets with friends—password-protected, of course!
-
-- Anonymity First: No real IDs, no phone numbers. Be you, be free. Delete sessions afterward—no traces left behind.
-
-- Join the Hush: No need for real identification. Just pure, anonymous connection. Welcome to Sessions! 
-
-
-
-### Screenshots
-<p float="left">
-<img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/home.jpg" alt="Home" width="200" height="auto">
-<img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/chat.jpg" alt="Chat" width="200" height="auto">
-<img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/login.jpg" alt="Login" width="200" height="auto">
-<img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Images/delete.jpg" alt="Delete" width="200" height="auto">
+<p align="center">
+  <img src="https://github.com/ArjunKVarma/Sessions-Chat_Rooms_an_Private_Messenger/blob/master/Diagrams/sessions-architecture-w.png" alt="Architecture Diagram" width="700">
 </p>
 
+---
 
+## 🔒 Security & Privacy Core
 
-## For developers
-The project was built using Flutter and Firebase
-If you wish to contribute to the project you can fork the repo to your own github and cloning into your local machine.
-After cloning to your machine, go to the projects root directory and execute  command to get started!
-```sh
-flutter pub get 
-```
+Sessions employs a state-of-the-art security suite to ensure conversations remain strictly confidential:
 
+* **Zero-Knowledge Architecture:** No real identities, phone numbers, or email sign-ups are required. Room keys and passwords are never transmitted or stored in plain text.
+* **End-to-End (E2E) Encryption:** Messages and shared images are encrypted client-side using the AES-256 algorithm via the `encrypt` package.
+* **Derived Cryptographic Keys:** Decryption keys are derived dynamically on the user's device using a cryptographic combination of the room's three-word ID and password. Firebase never has access to the keys or the plaintext message content.
+* **SHA-256 Room Hashing:** Room identifiers are hashed client-side with SHA-256 before interacting with the Firebase backend. The server only sees anonymous hashes, meaning database admins cannot know the names of active rooms.
+* **Ephemeral "No Traces" Rooms:** Upon session deletion, all message logs, files, and room associations are immediately and permanently wiped from both local devices and Firebase servers.
 
-### Architecture and program flow
-<img src="https://github.com/ArjunKVarma/Session-Chat/blob/master/Diagrams/sessions-architecture-w.png" alt="Diagram" width="600" height="auto">
+---
 
+## 📱 Screenshots
 
-*Thankyou for reading. Contribute to this project to make it a bug free, stable experience*
+<p align="center" float="left">
+  <img src="https://github.com/ArjunKVarma/Sessions-Chat_Rooms_an_Private_Messenger/blob/master/Images/login.jpg" alt="Login Page" width="200" style="margin: 10px; border-radius: 10px;">
+  <img src="https://github.com/ArjunKVarma/Sessions-Chat_Rooms_an_Private_Messenger/blob/master/Images/home.jpg" alt="Home Page" width="200" style="margin: 10px; border-radius: 10px;">
+  <img src="https://github.com/ArjunKVarma/Sessions-Chat_Rooms_an_Private_Messenger/blob/master/Images/chat.jpg" alt="Chat Interface" width="200" style="margin: 10px; border-radius: 10px;">
+  <img src="https://github.com/ArjunKVarma/Sessions-Chat_Rooms_an_Private_Messenger/blob/master/Images/delete.jpg" alt="Delete Room" width="200" style="margin: 10px; border-radius: 10px;">
+</p>
 
+---
+
+## 🚀 Setup & Contributions
+
+To set up the development environment locally:
+
+1. **Clone & Setup:**
+   ```bash
+   git clone https://github.com/ArjunKVarma/Sessions-Chat_Rooms_an_Private_Messenger.git
+   cd Sessions-Chat_Rooms_an_Private_Messenger
+   ```
+2. **Fetch Dependencies:**
+   ```bash
+   flutter pub get
+   ```
+3. **Configure Firebase:** Set up your Firebase project and add your `google-services.json` to the `android/app` directory.
+4. **Run Application:**
+   ```bash
+   flutter run
+   ```
+
+*Thank you for contributing to keeping Sessions anonymous, secure, and lightning-fast!*

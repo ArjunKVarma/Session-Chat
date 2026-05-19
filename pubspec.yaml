@@ -39,10 +39,16 @@ dependencies:
   firebase_auth: ^5.1.4
   cloud_firestore: ^5.2.1
   word_generator: ^0.4.4
-  emoji_picker_flutter: ^2.2.0
+  emoji_picker_flutter: ^4.4.0
   uuid: ^4.4.2
   image_picker: ^1.1.2
-  firebase_storage: ^12.2.0
+  crypto: ^3.0.3
+  encrypt: ^5.0.3
+  provider: ^6.1.5+1
+  google_fonts: ^8.1.0
+  record: ^6.2.0
+  audioplayers: ^6.0.0
+  path_provider: ^2.1.0
 
   
 

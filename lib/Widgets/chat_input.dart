@@ -1,146 +1,375 @@
-// Import the necessary packages for building Flutter widgets
+import 'dart:async';
+import 'dart:io';
+import 'dart:ui';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-// Import the ChatService class from the chat_service.dart file in the Services directory
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:sessionchat/Services/chat_service.dart';
+import 'package:provider/provider.dart';
 
-// Define a stateless widget named ChatInput
-class ChatInput extends StatelessWidget {
-  // Define the properties of the ChatInput widget
-  //
-  // - room_id: a required property of type String, which represents the ID of the chat room
-  // - password: a required property of type String, which represents the password of the chat room
-  // - chatMessageController: a TextEditingController instance, which is used to control the text in the chat input field
-  // - _chat: an instance of the ChatService class, which is used to interact with the chat service
-  // - ScollBottomCall: a required property of type VoidCallback, which is a callback function that is called when the user scrolls to the bottom of the chat
+class ChatInput extends StatefulWidget {
   final String room_id;
   final String password;
-  final chatMessageController = TextEditingController();
-  final ChatService _chat = ChatService();
-  final VoidCallback ScollBottomCall;
+  final VoidCallback scrollBottomCall;
 
-  // Define a method named send that takes no parameters
-  // This method is used to send a chat message to the chat room
-  void send() async {
-    // Call the sendMessage method on the ChatService instance
-    //
-    // - room_id: the ID of the chat room
-    // - password: the password of the chat room
-    // - chatMessageController.text: the text of the chat message
-    // - "text": the type of the chat message (in this case, a text message)
-    // - null: no additional data is sent with the chat message
-    await _chat.sendMessage(
-        room_id, password, chatMessageController.text, "text", null);
-  }
-
-  // Define a constructor for the ChatInput widget
-  //
-  // - key: an optional parameter of type Key?, which is used to identify the widget in the widget tree
-  // - room_id: a required parameter of type String, which represents the ID of the chat room
-  // - password: a required parameter of type String, which represents the password of the chat room
-  // - ScollBottomCall: a required parameter of type VoidCallback, which is a callback function that is called when the user scrolls to the bottom of the chat
-  ChatInput({
-    Key? key,
+  const ChatInput({
+    super.key,
     required this.room_id,
     required this.password,
-    required this.ScollBottomCall,
-  }) : super(key: key);
+    required this.scrollBottomCall,
+  });
 
-  // Override the build method to define the layout of the ChatInput widget
+  @override
+  State<ChatInput> createState() => ChatInputState();
+}
+
+class ChatInputState extends State<ChatInput> {
+  final TextEditingController _controller = TextEditingController();
+  bool _showEmoji = false;
+  bool _isRecording = false;
+  String? _recordingPath;
+  final AudioRecorder _recorder = AudioRecorder();
+  Timer? _recordTimer;
+  int _recordSeconds = 0;
+  String? _replyToId;
+  String? _replyText;
+  final FocusNode _focusNode = FocusNode();
+
+  // Public method to set reply state
+  void setReply(String id, String text) {
+    setState(() {
+      _replyToId = id;
+      _replyText = text;
+    });
+    // Auto-focus the input field when replying
+    _focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _recorder.dispose();
+    _recordTimer?.cancel();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _send(BuildContext context) async {
+    final chat = context.read<ChatService>();
+    if (_controller.text.trim().isEmpty) return;
+    
+    await chat.sendMessage(
+      widget.room_id, 
+      widget.password, 
+      _controller.text.trim(), 
+      "text",
+      replyTo: _replyToId,
+      replyText: _replyText,
+    );
+
+    setState(() {
+      _replyToId = null;
+      _replyText = null;
+    });
+    _controller.clear();
+    widget.scrollBottomCall();
+  }
+
+  Future<void> _startRecording() async {
+    final hasPermission = await _recorder.hasPermission();
+    if (!hasPermission) return;
+
+    final dir = await getTemporaryDirectory();
+    _recordingPath = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+    await _recorder.start(
+      const RecordConfig(encoder: AudioEncoder.aacLc),
+      path: _recordingPath!,
+    );
+
+    setState(() {
+      _isRecording = true;
+      _recordSeconds = 0;
+    });
+
+    _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _recordSeconds++);
+    });
+  }
+
+  Future<void> _stopAndSendRecording() async {
+    _recordTimer?.cancel();
+    await _recorder.stop();
+
+    if (!mounted) return;
+
+    setState(() => _isRecording = false);
+
+    if (_recordingPath != null && File(_recordingPath!).existsSync()) {
+      final chat = context.read<ChatService>();
+      await chat.uploadAudio(widget.room_id, widget.password, _recordingPath!);
+      widget.scrollBottomCall();
+    }
+  }
+
+  Future<void> _cancelRecording() async {
+    _recordTimer?.cancel();
+    await _recorder.stop();
+    if (_recordingPath != null) {
+      final f = File(_recordingPath!);
+      if (f.existsSync()) f.deleteSync();
+    }
+    setState(() {
+      _isRecording = false;
+      _recordSeconds = 0;
+    });
+  }
+
+  String _formatDuration(int s) =>
+      '${(s ~/ 60).toString().padLeft(2, '0')}:${(s % 60).toString().padLeft(2, '0')}';
+
   @override
   Widget build(BuildContext context) {
-    // Return a Container widget
-    return Container(
-      // Set the decoration property of the Container to a BoxDecoration instance
-      decoration: BoxDecoration(
-        // Set the color property of the BoxDecoration to the surface color of the current theme
-        color: Theme.of(context).colorScheme.surface,
-        // Set the border radius property of the BoxDecoration to a BorderRadius instance with a circular radius of 20.0 on the top left and top right corners
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      // Set the height property of the Container to 100.0
-      height: 100,
-      // Set the child property of the Container to a Row widget
-      child: Row(
-        // Set the mainAxisAlignment property of the Row to MainAxisAlignment.spaceBetween
-        // This will space the children of the Row evenly between the start and end of the Row
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        // Define the children of the Row
-        children: [
-          // Create an IconButton widget
-          IconButton(
-            // Set the onPressed property of the IconButton to a callback function that calls the getImage method on the ChatService instance
-            onPressed: () async {
-              await _chat.getImage(room_id, password);
-            },
-            // Set the icon property of the IconButton to a CupertinoIcons.paperclip icon
-            icon: const Icon(CupertinoIcons.paperclip),
-            // Set the color property of the IconButton to the onSecondary color of the current theme
-            color: Theme.of(context).colorScheme.onSecondary,
-          ),
-          // Create an Expanded widget to allow the TextField to take up the remaining space
-          Expanded(
-            // Create a TextField widget to allow the user to input text
-            child: TextField(
-              // Call the ScollBottomCall function when the TextField is tapped
-              onTap: ScollBottomCall,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? Colors.black.withOpacity(0.3) : Colors.white.withOpacity(0.8);
+    final borderColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.08);
+    final inputFill = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05);
+    final hintColor = isDark ? Colors.white54 : Colors.black38;
+    final iconColor = isDark ? Colors.white70 : Colors.black54;
+    final textColor = isDark ? Colors.white : Colors.black87;
 
-              // Set the controller of the TextField to the chatMessageController
-              controller: chatMessageController,
-
-              // Set the maximum number of lines to null, allowing the TextField to expand
-              maxLines: null,
-
-              // Set the keyboard type to TextInputType.multiline to allow multiple lines of text
-              keyboardType: TextInputType.multiline,
-
-              // Set the style of the text in the TextField
-              style: TextStyle(
-                // Set the color of the text to the onSecondary color of the current theme
-                color: Theme.of(context).colorScheme.onSecondary,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                border: Border(top: BorderSide(color: borderColor, width: 1.0)),
               ),
-
-              // Create an InputDecoration to customize the appearance of the TextField
-              decoration: InputDecoration(
-                // Set the hint text to "Message"
-                hintText: "Message",
-
-                // Remove the border of the TextField
-                border: InputBorder.none,
-
-                // Set the style of the hint text
-                hintStyle: TextStyle(
-                  // Set the color of the hint text to the onSecondary color of the current theme
-                  color: Theme.of(context).colorScheme.onSecondary,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    if (_replyToId != null) _buildReplyPreview(isDark, textColor),
+                    _isRecording ? _buildRecordingBar(iconColor) : _buildInputBar(inputFill, hintColor, iconColor, textColor, context),
+                  ],
                 ),
               ),
             ),
           ),
-          // Create an IconButton widget
+        ),
+        // Emoji Picker
+        if (_showEmoji)
+          SizedBox(
+            height: 280,
+            child: EmojiPicker(
+              textEditingController: _controller,
+              onEmojiSelected: (category, emoji) {
+                _controller.text += emoji.emoji;
+                _controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _controller.text.length),
+                );
+              },
+              config: Config(
+                emojiViewConfig: EmojiViewConfig(
+                  backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                  columns: 8,
+                  emojiSizeMax: 28,
+                ),
+                categoryViewConfig: CategoryViewConfig(
+                  backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                  iconColor: Colors.grey,
+                  iconColorSelected: const Color(0xFF38BDF8),
+                  indicatorColor: const Color(0xFF38BDF8),
+                ),
+                bottomActionBarConfig: BottomActionBarConfig(
+                  backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                  buttonColor: const Color(0xFF38BDF8),
+                  buttonIconColor: Colors.white,
+                ),
+                searchViewConfig: SearchViewConfig(
+                  backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  buttonIconColor: const Color(0xFF38BDF8),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInputBar(Color inputFill, Color hintColor, Color iconColor, Color textColor, BuildContext context) {
+    return Row(
+      children: [
+        // Emoji toggle
+        IconButton(
+          onPressed: () => setState(() => _showEmoji = !_showEmoji),
+          icon: Icon(_showEmoji ? Icons.keyboard : Icons.emoji_emotions_outlined),
+          color: _showEmoji ? const Color(0xFF38BDF8) : iconColor,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+        const SizedBox(width: 6),
+        // Image attachment
+        IconButton(
+          onPressed: () async {
+            setState(() => _showEmoji = false);
+            final chat = context.read<ChatService>();
+            await chat.getImage(widget.room_id, widget.password);
+            widget.scrollBottomCall();
+          },
+          icon: const Icon(CupertinoIcons.paperclip),
+          color: iconColor,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+        const SizedBox(width: 8),
+        // Text field
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 2),
+            decoration: BoxDecoration(
+              color: inputFill,
+              borderRadius: BorderRadius.circular(24.0),
+              border: Border.all(color: hintColor.withOpacity(0.2)),
+            ),
+            child: TextField(
+              onTap: () {
+                setState(() => _showEmoji = false);
+                widget.scrollBottomCall();
+              },
+              controller: _controller,
+              focusNode: _focusNode,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                hintText: "Message",
+                border: InputBorder.none,
+                hintStyle: TextStyle(color: hintColor),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Mic button (hold to record)
+        GestureDetector(
+          onLongPressStart: (_) => _startRecording(),
+          onLongPressEnd: (_) => _stopAndSendRecording(),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: iconColor.withOpacity(0.1),
+            ),
+            child: Icon(Icons.mic_none, color: iconColor, size: 22),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Send button
+        Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
+            ),
+          ),
+          child: IconButton(
+            onPressed: () => _send(context),
+            icon: const Icon(Icons.send_rounded, size: 20),
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReplyPreview(bool isDark, Color textColor) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border(left: BorderSide(color: const Color(0xFF38BDF8), width: 4)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Replying to",
+                  style: TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _replyText ?? "",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 13),
+                ),
+              ],
+            ),
+          ),
           IconButton(
-            // Set the onPressed property of the IconButton to a callback function
-            onPressed: () {
-              // Call the ScollBottomCall callback function to scroll to the bottom of the chat
-              ScollBottomCall();
-              // Check if the text in the chat input field is not empty
-              if (chatMessageController.text.isNotEmpty) {
-                // Call the send method to send the chat message
-                send();
-                // Clear the text in the chat input field
-                chatMessageController.clear();
-              }
-            },
-            // Set the icon property of the IconButton to an Icons.send_rounded icon
-            icon: const Icon(Icons.send_rounded),
-            // Set the color property of the IconButton to the onSecondary color of the current theme
-            color: Theme.of(context).colorScheme.onSecondary,
-          )
+            onPressed: () => setState(() {
+              _replyToId = null;
+              _replyText = null;
+            }),
+            icon: const Icon(Icons.close, size: 18),
+            color: textColor.withOpacity(0.5),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRecordingBar(Color iconColor) {
+    return Row(
+      children: [
+        // Cancel
+        IconButton(
+          onPressed: _cancelRecording,
+          icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+        ),
+        const SizedBox(width: 8),
+        // Animated mic + timer
+        const Icon(Icons.mic, color: Color(0xFFEF4444), size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Recording  ${_formatDuration(_recordSeconds)}',
+            style: const TextStyle(
+              color: Color(0xFFEF4444),
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ),
+        // Send recording
+        GestureDetector(
+          onTap: _stopAndSendRecording,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
+              ),
+            ),
+            child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+          ),
+        ),
+      ],
     );
   }
 }
